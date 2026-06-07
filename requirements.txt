@@ -1,0 +1,204 @@
+classdef EngineeringCalculator < matlab.apps.AppBase
+
+    % Properties that correspond to app components
+    properties (Access = public)
+        UIFigure                matlab.ui.Figure
+        TitleLabel              matlab.ui.control.Label
+        TabGroup                matlab.ui.container.TabGroup
+        
+        % Tab 1 - Beam Deflection
+        BeamTab                 matlab.ui.container.Tab
+        BeamForceLabel          matlab.ui.control.Label
+        BeamForceField          matlab.ui.control.NumericEditField
+        BeamLengthLabel         matlab.ui.control.Label
+        BeamLengthField         matlab.ui.control.NumericEditField
+        BeamELabel              matlab.ui.control.Label
+        BeamEField              matlab.ui.control.NumericEditField
+        BeamILabel              matlab.ui.control.Label
+        BeamIField              matlab.ui.control.NumericEditField
+        BeamResultLabel         matlab.ui.control.Label
+        BeamResultField         matlab.ui.control.EditField
+        BeamAxes                matlab.ui.control.UIAxes
+        BeamCalcButton          matlab.ui.control.Button
+        BeamResetButton         matlab.ui.control.Button
+        BeamUnitDrop            matlab.ui.control.DropDown
+        BeamUnitLabel           matlab.ui.control.Label
+
+        % Tab 2 - Stress Analysis
+        StressTab               matlab.ui.container.Tab
+        StressForceLabel        matlab.ui.control.Label
+        StressForceField        matlab.ui.control.NumericEditField
+        StressAreaLabel         matlab.ui.control.Label
+        StressAreaField         matlab.ui.control.NumericEditField
+        StressELabel            matlab.ui.control.Label
+        StressEField2           matlab.ui.control.NumericEditField
+        StressResultLabel       matlab.ui.control.Label
+        StressResultField       matlab.ui.control.EditField
+        StressStrainField       matlab.ui.control.EditField
+        StressStrainLabel       matlab.ui.control.Label
+        StressAxes              matlab.ui.control.UIAxes
+        StressCalcButton        matlab.ui.control.Button
+        StressResetButton       matlab.ui.control.Button
+
+        % Tab 3 - Fluid Flow (Pipe)
+        FluidTab                matlab.ui.container.Tab
+        FluidDLabel             matlab.ui.control.Label
+        FluidDField             matlab.ui.control.NumericEditField
+        FluidVLabel             matlab.ui.control.Label
+        FluidVField             matlab.ui.control.NumericEditField
+        FluidRhoLabel           matlab.ui.control.Label
+        FluidRhoField           matlab.ui.control.NumericEditField
+        FluidMuLabel            matlab.ui.control.Label
+        FluidMuField            matlab.ui.control.NumericEditField
+        FluidReLabel            matlab.ui.control.Label
+        FluidReField            matlab.ui.control.EditField
+        FluidTypeField          matlab.ui.control.EditField
+        FluidTypeLabel          matlab.ui.control.Label
+        FluidAxes               matlab.ui.control.UIAxes
+        FluidCalcButton         matlab.ui.control.Button
+        FluidResetButton        matlab.ui.control.Button
+        FluidSlider             matlab.ui.control.Slider
+        FluidSliderLabel        matlab.ui.control.Label
+    end
+
+    methods (Access = private)
+
+        % ---- BEAM DEFLECTION CALLBACKS ----
+        function BeamCalcButtonPushed(app, ~)
+            try
+                F = app.BeamForceField.Value;
+                L = app.BeamLengthField.Value;
+                E = app.BeamEField.Value;
+                I = app.BeamIField.Value;
+
+                if F <= 0 || L <= 0 || E <= 0 || I <= 0
+                    app.BeamResultField.Value = 'ERROR: All values must be > 0';
+                    return;
+                end
+
+                % Max deflection at free end (cantilever): delta = FL^3 / 3EI
+                delta = (F * L^3) / (3 * E * I);
+
+                unit = app.BeamUnitDrop.Value;
+                if strcmp(unit, 'mm')
+                    delta_display = delta * 1000;
+                    unit_str = 'mm';
+                else
+                    delta_display = delta;
+                    unit_str = 'm';
+                end
+
+                app.BeamResultField.Value = sprintf('%.5f %s', delta_display, unit_str);
+
+                % Plot deflection along beam
+                x = linspace(0, L, 100);
+                y = (F .* x.^2) ./ (6 * E * I) .* (3*L - x);
+                if strcmp(unit, 'mm'), y = y * 1000; end
+
+                cla(app.BeamAxes);
+                plot(app.BeamAxes, x, y, 'b-', 'LineWidth', 2);
+                xlabel(app.BeamAxes, 'Position along beam (m)');
+                ylabel(app.BeamAxes, ['Deflection (' unit_str ')']);
+                title(app.BeamAxes, 'Cantilever Beam Deflection Profile');
+                grid(app.BeamAxes, 'on');
+
+            catch
+                app.BeamResultField.Value = 'ERROR: Invalid input';
+            end
+        end
+
+        function BeamResetButtonPushed(app, ~)
+            app.BeamForceField.Value = 0;
+            app.BeamLengthField.Value = 0;
+            app.BeamEField.Value = 0;
+            app.BeamIField.Value = 0;
+            app.BeamResultField.Value = '';
+            cla(app.BeamAxes);
+        end
+
+        % ---- STRESS ANALYSIS CALLBACKS ----
+        function StressCalcButtonPushed(app, ~)
+            try
+                F = app.StressForceField.Value;
+                A = app.StressAreaField.Value;
+                E = app.StressEField2.Value;
+
+                if F <= 0 || A <= 0 || E <= 0
+                    app.StressResultField.Value = 'ERROR: All values must be > 0';
+                    return;
+                end
+
+                sigma = F / A;           % Stress (Pa)
+                epsilon = sigma / E;     % Strain (dimensionless)
+
+                app.StressResultField.Value = sprintf('%.4f MPa', sigma/1e6);
+                app.StressStrainField.Value = sprintf('%.6f (dimensionless)', epsilon);
+
+                % Plot stress-strain up to this point
+                e_range = linspace(0, epsilon * 2, 100);
+                s_range = E .* e_range / 1e6;
+
+                cla(app.StressAxes);
+                plot(app.StressAxes, e_range, s_range, 'r-', 'LineWidth', 2);
+                hold(app.StressAxes, 'on');
+                plot(app.StressAxes, epsilon, sigma/1e6, 'ko', 'MarkerSize', 8, 'MarkerFaceColor', 'k');
+                xlabel(app.StressAxes, 'Strain (-)');
+                ylabel(app.StressAxes, 'Stress (MPa)');
+                title(app.StressAxes, 'Stress-Strain Diagram');
+                legend(app.StressAxes, 'Linear Region', 'Operating Point');
+                grid(app.StressAxes, 'on');
+                hold(app.StressAxes, 'off');
+
+            catch
+                app.StressResultField.Value = 'ERROR: Invalid input';
+            end
+        end
+
+        function StressResetButtonPushed(app, ~)
+            app.StressForceField.Value = 0;
+            app.StressAreaField.Value = 0;
+            app.StressEField2.Value = 0;
+            app.StressResultField.Value = '';
+            app.StressStrainField.Value = '';
+            cla(app.StressAxes);
+        end
+
+        % ---- FLUID FLOW CALLBACKS ----
+        function FluidCalcButtonPushed(app, ~)
+            try
+                D = app.FluidDField.Value;
+                V = app.FluidVField.Value;
+                rho = app.FluidRhoField.Value;
+                mu = app.FluidMuField.Value;
+
+                if D <= 0 || V <= 0 || rho <= 0 || mu <= 0
+                    app.FluidReField.Value = 'ERROR: All values > 0';
+                    return;
+                end
+
+                Re = (rho * V * D) / mu;
+                app.FluidReField.Value = sprintf('%.2f', Re);
+
+                if Re < 2300
+                    app.FluidTypeField.Value = 'LAMINAR';
+                elseif Re < 4000
+                    app.FluidTypeField.Value = 'TRANSITIONAL';
+                else
+                    app.FluidTypeField.Value = 'TURBULENT';
+                end
+
+                % Plot Re vs Velocity (varying V from 0 to slider max)
+                V_max = app.FluidSlider.Value;
+                if V_max <= 0, V_max = 10; end
+                V_range = linspace(0.01, V_max, 100);
+                Re_range = (rho .* V_range .* D) ./ mu;
+
+                cla(app.FluidAxes);
+                plot(app.FluidAxes, V_range, Re_range, 'm-', 'LineWidth', 2);
+                hold(app.FluidAxes, 'on');
+                yline(app.FluidAxes, 2300, 'g--', 'Laminar Limit', 'LineWidth', 1.5);
+                yline(app.FluidAxes, 4000, 'r--', 'Turbulent Limit', 'LineWidth', 1.5);
+                plot(app.FluidAxes, V, Re, 'ko', 'MarkerSize', 8, 'MarkerFaceColor', 'k');
+                xlabel(app.FluidAxes, 'Velocity (m/s)');
+                ylabel(app.FluidAxes, 'Reynolds Number');
+                title
