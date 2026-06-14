@@ -1,7 +1,7 @@
 import flet as ft
 import base64
 import os
-import flet_video as ftv
+
 
 
 def get_icon(name: str):
@@ -755,7 +755,7 @@ ft.Container(
                                 "View GitHub Profile",
                                 bgcolor=primary,
                                 color="#000000",
-                                on_click=lambda _: __import__('webbrowser').open("https://github.com/gideon-03"),
+                                on_click=lambda _: page.launch_url("https://github.com/gideon-03"),
                             ),
                         ],
                     ),
