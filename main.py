@@ -1,6 +1,7 @@
 import flet as ft
 import base64
 import os
+import flet_video as ftv
 
 
 
@@ -932,5 +933,6 @@ ft.Container(
 
 if __name__ == "__main__":
     ft.app(target=main, assets_dir="assets", view=ft.AppView.WEB_BROWSER)
+
 
 
