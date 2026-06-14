@@ -1,6 +1,7 @@
 import flet as ft
 import base64
 import os
+import flet_video as ftv
 
 
 def get_icon(name: str):
@@ -563,9 +564,7 @@ def main(page: ft.Page):
                                 "▶ Watch Video",
                                 bgcolor=primary,
                                 color="#000000",
-                                on_click=lambda _: __import__('webbrowser').open(
-                                    "https://www.youtube.com/watch?v=JeznW_7DlB0"
-                                ),
+                                on_click=lambda _: page.launch_url("https://www.youtube.com/watch?v=JeznW_7DlB0"),
                             ),
                         ],
                     ),
@@ -606,14 +605,12 @@ def main(page: ft.Page):
                                 "▶ Watch Video",
                                 bgcolor=primary,
                                 color="#000000",
-                                on_click=lambda _: __import__('webbrowser').open(
-                                    "https://www.youtube.com/watch?v=pkYVOmU3MgA"
-                                ),
+                                on_click=lambda _: page.launch_url("https://www.youtube.com/watch?v=JeznW_7DlB0"),
                             ),
                         ],
                     ),
                 ),
-                                # ── Post 3 ──
+# ── Post 3 ──
 ft.Container(
     bgcolor=card,
     border_radius=12,
@@ -623,24 +620,21 @@ ft.Container(
         spacing=14,
         controls=[
             ft.Icon(get_icon("PLAY_CIRCLE"), size=38, color=primary),
-            ft.Text("YOUR BLOG POST TITLE HERE", size=22,
+            ft.Text("My Portfolio Overview", size=22,
                     weight=ft.FontWeight.BOLD, color=text),
             ft.Text(
-                "Your blog post content goes here. Write your first paragraph "
-                "of technical explanation in this space. Add enough detail to "
-                "explain the concept clearly to someone reading your portfolio.",
-    size=15, color=subtext,
+                "A walkthrough of my FolioX portfolio — covering my role in the OreGuide "
+                "project, Firebase Storage integration, MATLAB certifications, and the "
+                "technical blog. Built with Python and the Flet framework.",
+                size=15, color=subtext,
             ),
-            ft.Text("Watch: Your Video Title Here", size=13,
+            ft.Text("Watch: Portfolio Walkthrough Video", size=13,
                     color=primary, italic=True),
-            ft.ElevatedButton(
-                "▶ Watch Video",
-                bgcolor=primary,
-                color="#000000",
-                on_click=lambda _: __import__('webbrowser').open(
-                    "https://www.youtube.com/watch?v=YOUR_VIDEO_ID"
-                ),
-            ),
+            ft.Html(
+    '<video width="700" height="400" controls style="border-radius:8px;background:#000;">'
+    '<source src="/my_video.mp4" type="video/mp4">'
+    '</video>'
+),
         ],
     ),
 ),
