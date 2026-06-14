@@ -50,32 +50,41 @@ def main(page: ft.Page):
         await page.push_route(route)
 
     def nav_link(label: str, section_key: str):
-      if section_key == "github":
+        if section_key == "github":
+            return ft.Button(
+                label,
+                color=text,
+                bgcolor=panel,
+                elevation=0,
+                height=36,
+                on_click=lambda _: page.run_task(open_route, "/github"),
+                style=ft.ButtonStyle(
+                    padding=ft.Padding(8, 6, 8, 6),
+                    text_style=ft.TextStyle(size=13, weight=ft.FontWeight.BOLD),
+                ),
+            )
+        route = "/" if section_key == "home" else f"/{section_key}"
         return ft.Button(
             label,
             color=text,
             bgcolor=panel,
             elevation=0,
             height=36,
-            on_click=lambda _: __import__('webbrowser').open("https://github.com/gideon-03"),
+            on_click=lambda _: page.run_task(open_route, route),
             style=ft.ButtonStyle(
                 padding=ft.Padding(8, 6, 8, 6),
                 text_style=ft.TextStyle(size=13, weight=ft.FontWeight.BOLD),
             ),
-         )
-      route = "/" if section_key == "home" else f"/{section_key}"
-      return ft.Button(
-        label,
-        color=text,
-        bgcolor=panel,
-        elevation=0,
-        height=36,
-        on_click=lambda _: page.run_task(open_route, route),
-        style=ft.ButtonStyle(
-            padding=ft.Padding(8, 6, 8, 6),
-            text_style=ft.TextStyle(size=13, weight=ft.FontWeight.BOLD),
-        ),
-    )
+        )
+
+    def section_title(label: str, title: str):
+        return ft.Column(
+            spacing=8,
+            controls=[
+                ft.Text(label, size=14, color=primary, weight=ft.FontWeight.BOLD),
+                ft.Text(title, size=42, weight=ft.FontWeight.BOLD, color=text),
+            ],
+        )
     def section_title(label: str, title: str):
         return ft.Column(
             spacing=8,
@@ -604,6 +613,37 @@ def main(page: ft.Page):
                         ],
                     ),
                 ),
+                                # ── Post 3 ──
+ft.Container(
+    bgcolor=card,
+    border_radius=12,
+    padding=28,
+    border=border_all(1, secondary),
+    content=ft.Column(
+        spacing=14,
+        controls=[
+            ft.Icon(get_icon("PLAY_CIRCLE"), size=38, color=primary),
+            ft.Text("YOUR BLOG POST TITLE HERE", size=22,
+                    weight=ft.FontWeight.BOLD, color=text),
+            ft.Text(
+                "Your blog post content goes here. Write your first paragraph "
+                "of technical explanation in this space. Add enough detail to "
+                "explain the concept clearly to someone reading your portfolio.",
+    size=15, color=subtext,
+            ),
+            ft.Text("Watch: Your Video Title Here", size=13,
+                    color=primary, italic=True),
+            ft.ElevatedButton(
+                "▶ Watch Video",
+                bgcolor=primary,
+                color="#000000",
+                on_click=lambda _: __import__('webbrowser').open(
+                    "https://www.youtube.com/watch?v=YOUR_VIDEO_ID"
+                ),
+            ),
+        ],
+    ),
+),
 
                 # ── Mathematical Notation ──
                 ft.Container(
@@ -639,23 +679,207 @@ def main(page: ft.Page):
     )
 
     # ─────────────────────────────────────────────
-    # GITHUB
+    # GITHUB EVIDENCE DIALOG
+    # ─────────────────────────────────────────────
+    evidence_dialog = ft.AlertDialog(
+        modal=True,
+        bgcolor=card,
+        actions=[
+            ft.TextButton(
+                "Close",
+                style=ft.ButtonStyle(color=primary),
+                on_click=lambda _: close_evidence(),
+            )
+        ],
+        actions_alignment=ft.MainAxisAlignment.END,
+    )
+
+    def close_evidence():
+        evidence_dialog.open = False
+        page.update()
+
+    def open_evidence(title: str, image_path: str):
+        b64 = load_image_base64(image_path)
+        evidence_dialog.title = ft.Text(
+            title, size=20, weight=ft.FontWeight.BOLD, color=primary
+        )
+        evidence_dialog.content = ft.Container(
+            width=700,
+            height=470,
+            alignment=ft.Alignment.CENTER,
+            content=ft.Image(
+                src=f"data:image/png;base64,{b64}",
+                fit=ft.BoxFit.CONTAIN,
+                width=680,
+                height=460,
+            ) if b64 else ft.Text("Image not found", color="red"),
+        )
+        evidence_dialog.open = True
+        if evidence_dialog not in page.overlay:
+            page.overlay.append(evidence_dialog)
+        page.update()
+
+    # ─────────────────────────────────────────────
+    # GITHUB SECTION
     # ─────────────────────────────────────────────
     github_section = ft.Container(
         key="github",
         bgcolor=panel,
         padding=symmetric_padding(horizontal=50, vertical=50),
         content=ft.Column(
-            spacing=24,
+            spacing=28,
             controls=[
                 ft.Text("GitHub Evidence", size=42, weight=ft.FontWeight.BOLD, color=text),
-                ft.ResponsiveRow(
-                    run_spacing=20,
-                    controls=[
-                        ft.Column(col={"md": 4, "sm": 12, "xs": 12}, controls=[feature_card("Commit History", "Screenshots and GitHub API commit tracking.", "HISTORY")]),
-                        ft.Column(col={"md": 4, "sm": 12, "xs": 12}, controls=[feature_card("Pull Requests", "Reviews, approvals and merge evidence.", "MERGE_TYPE")]),
-                        ft.Column(col={"md": 4, "sm": 12, "xs": 12}, controls=[feature_card("Impact Summary", "Explain engineering problems solved using your code.", "INSIGHTS")]),
-                    ],
+                ft.Text(
+                    "My individual contributions to the OreGuide group project — verified via GitHub.",
+                    size=16, color=subtext,
+                ),
+
+                # ── Profile Card ──
+                ft.Container(
+                    bgcolor=card,
+                    border_radius=12,
+                    padding=28,
+                    border=border_all(1, secondary),
+                    content=ft.Column(
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        spacing=16,
+                        controls=[
+                            ft.Container(
+                            width=180, height=180, border_radius=90,
+                            border=border_all(4, primary),
+                            content=ft.Image(
+                               src=f"data:image/png;base64,{load_image_base64('assets/github_profile.png')}",
+                               fit=ft.BoxFit.COVER,
+                               width=180,
+                               height=180,
+                            ),
+                        ),
+                            ft.Text("Kandjengo Gideon", size=22, weight=ft.FontWeight.BOLD, color=text),
+                            ft.Text("gideon-03", size=16, color=subtext),
+                            ft.Button(
+                                "View GitHub Profile",
+                                bgcolor=primary,
+                                color="#000000",
+                                on_click=lambda _: __import__('webbrowser').open("https://github.com/gideon-03"),
+                            ),
+                        ],
+                    ),
+                ),
+
+                # ── Commit History ──
+                ft.Text("Commit History", size=20, weight=ft.FontWeight.BOLD, color=primary),
+                ft.Container(
+                    bgcolor=card,
+                    border_radius=12,
+                    padding=22,
+                    border=border_all(1, secondary),
+                    content=ft.Column(
+                        spacing=12,
+                        controls=[
+                            ft.Icon(get_icon("HISTORY"), size=34, color=primary),
+                            ft.Text("3 Commits to the OreGuide Repository", size=17,
+                                    weight=ft.FontWeight.BOLD, color=text),
+                            ft.Text(
+                                "Screenshot from my GitHub profile (gideon-03) showing 3 commits "
+                                "made in June 2026 to the UNAM-I3691CP-PixelPebble-OreG... repository.",
+                                size=14, color=subtext,
+                            ),
+                            ft.ElevatedButton(
+                                "View Commit Screenshot",
+                                bgcolor=primary,
+                                color="#000000",
+                                on_click=lambda _: open_evidence(
+                                    "Commit History", "assets/commit_history.png"
+                                ),
+                                style=ft.ButtonStyle(
+                                    padding=ft.Padding(10, 6, 10, 6),
+                                    text_style=ft.TextStyle(size=13, weight=ft.FontWeight.BOLD),
+                                ),
+                            ),
+                        ],
+                    ),
+                ),
+
+                # ── Pull Requests ──
+                ft.Text("Pull Request Logs", size=20, weight=ft.FontWeight.BOLD, color=primary),
+                ft.Container(
+                    bgcolor=card,
+                    border_radius=12,
+                    padding=22,
+                    border=border_all(1, secondary),
+                    content=ft.Column(
+                        spacing=12,
+                        controls=[
+                            ft.Icon(get_icon("MERGE_TYPE"), size=34, color=primary),
+                            ft.Text("OrePhotos Branch — Pull Request to Main", size=17,
+                                    weight=ft.FontWeight.BOLD, color=text),
+                            ft.Text(
+                                "GitHub Desktop showing the OrePhotos branch pushed to remote, "
+                                "and the pull request merging 2 commits with 99 lines added into main.",
+                                size=14, color=subtext,
+                            ),
+                            ft.Row(
+                                spacing=12,
+                                controls=[
+                                    ft.ElevatedButton(
+                                        "View Pull Request 1",
+                                        bgcolor=primary,
+                                        color="#000000",
+                                        on_click=lambda _: open_evidence(
+                                            "Pull Request — OrePhotos Branch", "assets/Pull_request.png"
+                                        ),
+                                        style=ft.ButtonStyle(
+                                            padding=ft.Padding(10, 6, 10, 6),
+                                            text_style=ft.TextStyle(size=13, weight=ft.FontWeight.BOLD),
+                                        ),
+                                    ),
+                                    ft.ElevatedButton(
+                                        "View Pull Request 2",
+                                        bgcolor=primary,
+                                        color="#000000",
+                                        on_click=lambda _: open_evidence(
+                                            "Pull Request — Code Changes", "assets/pull_request2.png"
+                                        ),
+                                        style=ft.ButtonStyle(
+                                            padding=ft.Padding(10, 6, 10, 6),
+                                            text_style=ft.TextStyle(size=13, weight=ft.FontWeight.BOLD),
+                                        ),
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                ),
+
+                # ── Impact Summary ──
+                ft.Text("Impact Summary", size=20, weight=ft.FontWeight.BOLD, color=primary),
+                ft.Container(
+                    bgcolor=card,
+                    border_radius=12,
+                    padding=22,
+                    border=border_all(1, secondary),
+                    content=ft.Column(
+                        spacing=12,
+                        controls=[
+                            ft.Icon(get_icon("INSIGHTS"), size=34, color=primary),
+                            ft.Text("How My Code Solved a Real Problem", size=17,
+                                    weight=ft.FontWeight.BOLD, color=text),
+                            ft.Text(
+                                "My contribution to the OreGuide app focused on the ore display module "
+                                "and Firebase integration. The app had no way of fetching and displaying "
+                                "ore data dynamically — I solved this by connecting Firebase Storage and "
+                                "Firestore to the app, allowing ore images and their properties to be "
+                                "loaded in real time. I built the OrePhotos branch, made 3 commits with "
+                                "99 lines of new code covering ore card styling, grid layout, and the "
+                                "Ores constants file, then submitted a pull request that was successfully "
+                                "merged into the main branch. This module directly serves Mining and "
+                                "Metallurgical engineering students who use the app to identify and "
+                                "learn about mineral ores.",
+                                size=15, color=subtext,
+                            ),
+                        ],
+                    ),
                 ),
             ],
         ),
@@ -712,4 +936,4 @@ def main(page: ft.Page):
 
 
 if __name__ == "__main__":
-    ft.run(main, web_renderer=ft.WebRenderer.CANVAS_KIT)
+    ft.app(target=main, assets_dir="assets", view=ft.AppView.WEB_BROWSER)
