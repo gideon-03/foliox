@@ -631,12 +631,13 @@ ft.Container(
             ),
             ft.Text("Watch: Portfolio Walkthrough Video", size=13,
                     color=primary, italic=True),
-            ft.ElevatedButton(
-    "? Play Portfolio Video",
-    bgcolor=primary,
-    color="#000000",
-    on_click=lambda _: page.launch_url("/my_video.mp4"),
-),
+            ftv.Video(
+                playlist=[ftv.VideoMedia("/my_video.mp4")],
+                width=700,
+                height=400,
+                autoplay=False,
+                show_controls=True,
+            ),
         ],
     ),
 ),
@@ -933,6 +934,7 @@ ft.Container(
 
 if __name__ == "__main__":
     ft.app(target=main, assets_dir="assets", view=ft.AppView.WEB_BROWSER)
+
 
 
 
